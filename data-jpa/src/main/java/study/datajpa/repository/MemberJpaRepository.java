@@ -53,4 +53,10 @@ public class MemberJpaRepository {
                 .getResultList();
     }
     // 쿼리문 안에서 :username 과 같이 :의 의미 = "파라미터로 넘어온 username을 의미함"
+
+    public List<Member> findByUsername(String username) {
+        return em.createNamedQuery("Member.findByUsername", Member.class)
+                .setParameter("username", "username")
+                .getResultList();
+    }
 }

@@ -13,12 +13,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"})       // 객체를 바로 찍을 때 출력되는 것 {team}은 team 의 연관관계까지 출력되기에 무한루프로 돌아 안써주는게 좋음
+@NamedQuery(
+        name = "Member.findByUsername",
+        query = "select m from Member m where m.username= :username"
+)   // name="엔티티명.메소드명"
 public class Member {
 
     // @Setter 은 가급적이면 실무에서 사용하지 않음(꼭 변경해야 할 때만 사용)
