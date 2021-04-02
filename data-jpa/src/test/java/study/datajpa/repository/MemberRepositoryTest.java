@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
@@ -14,6 +18,7 @@ import study.datajpa.entity.Team;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -174,4 +179,85 @@ class MemberRepositoryTest {
             System.out.println("member = " + member);
         }
     }
+
+    @Test
+    @Order(10)
+    public void returnType() {
+
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("AAA", 20);
+        memberRepository.save(m1);
+        memberRepository.save(m2);
+
+        Optional<Member> findMember = memberRepository.findOptionalByUsername("AAA");
+        System.out.println("findMember = " + findMember);
+        // Optional<Member> 에서 나는 Member라는 하나의 타입을 지정해서 한 건 조회를 했는데, AAA가 두 개일 경우 Exception이 터짐
+
+        /* 매우 중요!! => 컬렉션 조회할 때 이상한 값을 파라미터에 넣어주면 데이터가 없을 수 있는데 그 때 null이 아니라 빈 컬렉션을 제공해줌
+        =>  List 는 그냥 받으면 됨! null이 아니기 때문에 if(result != null) 이런거 써주면 안됌!
+        List<Member> result = memberRepository.findListByUsername("asfddhfh");
+        System.out.println("result = " + result.size());*/
+
+        /* 단건인 경우 => 컬렉션 조회할 때 이상한 값을 파라미터에 넣어주면 데이터가 없을 수 있는데 그 때 null 값을 받음
+        Member findMember1 = memberRepository.findMemberByUsername("assdhfhfjgj");
+        System.out.println("findMember = " + findMember);
+         */
+
+        /* Optional로 받을 경우 => 없을 수도 있다고 가정하기 때문에 null일 경우 Optional.empty로 값이 나옴
+        Optional<Member> findMember = memberRepository.findOptionalByUsername("assggd");
+        System.out.println("findMember = " + findMember);
+
+        따라서, 데이터가 있을 수도 있고 없을 수도 있기 때문에 Optional을 사용
+       */
+    }
+
+    @Test
+    @Order(11)
+    public void paging() {
+        //given
+        memberRepository.save(new Member(("member1"), 10));  // memberJpaRepository에 가짜객체를 넣어줌 new Member를 해줌으로써.
+        memberRepository.save(new Member(("member2"), 10));
+        memberRepository.save(new Member(("member3"), 10));
+        memberRepository.save(new Member(("member4"), 10));
+        memberRepository.save(new Member(("member5"), 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+        // page index는 1이 아니라 0부터 시작하고 / size 는 한 페이지에 몇 개를 가져올지 / sort는 안할꺼면 안적어도 됨 (위 : username을 DESC로 할꺼다)
+        // sort 가 너무 복잡할 경우 여기서 작성해도 안먹을 때가 있기 때문에 MemberRepository에서 @Query문 작성에서 직접 적어줌
+
+
+        // when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+        // long totalCount = memberRepository.totalCount(age); 이걸 적어주지 않아도 됨
+        // 반환 타입을 Page라고 받으면 page는 totalCount를 필요로 하는 걸 알고 알아서 totalCountQuery 까지 같이 날림
+        // ***API의 경우 바로 Controller에 반환하면 안됌/ entity는 반드시 외부에 노출시키면 안되고 내 Application에 숨겨야함. DTO로 변환해서 넘겨야함!!!!!***
+        // => 왜? entity 가 바뀌면 API 스펙이 변해버림
+
+        // |=>페이지를 유지하면서 DTO로 변환하는 방법
+        Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+        // page가 member를 감싸고 있는데, map은 내부의 것을 바꿔서 다른 결과를 냄 (위 : 내부의 entity에서 memberDto로 변환됨 -> api로 반환해도 됌)
+
+        //Slice<Member> page = memberRepository.findByAge(age, pageRequest); - Slice 타입 (특정 개수만 보여주고 "더 보기" 등의 버튼을 누를 시 특정 개수만큼 다음 페이지 더 보여주는 것
+        //Slice : 요청을 할 때 예를 들어, 한 페이지에 3개를 요청하면 3개가 아니라 +1을 해서 4개를 가져옴 (totalCount 를 안씀)
+
+        //List<Member> page = memberRepository.findByAge(age, pageRequest); - 페이징 쿼리는 0페이지부터 3개만 가져오고 싶을 때 & 몇 개도 있고 없고 등에서 사용
+
+        //then
+        List<Member> content = page.getContent(); // getContent - 페이지 안에서 0번째 페이지에서 3개를 꺼내오고 싶을 때 사용
+        long totalElements = page.getTotalElements();   // totalElements라고 하면 totalCount를 말함  // Slice 사용 시엔 totalCount 를 안쓰기 때문에 필요 없음
+
+        assertThat(content.size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);     // Slice 사용 시엔 totalCount 를 안쓰기 때문에 필요 없음
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getTotalPages()).isEqualTo(2);        // Slice 사용 시엔 totalCount 를 안쓰기 때문에 필요 없음
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+/*        for(Member member : content) {
+            System.out.println("member = " + member);
+        }
+        System.out.println("totalElement = " + totalElements);
+    }*/
 }

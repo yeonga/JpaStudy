@@ -59,4 +59,20 @@ public class MemberJpaRepository {
                 .setParameter("username", "username")
                 .getResultList();
     }
+
+    // 페이징 처리하기 Apr-02
+    public List<Member> findByPage(int age, int offset, int limit) {
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc")
+                .setParameter("age", age)       // 파라미터 넣어줌
+                .setFirstResult(offset)     // 어디서부터 가져올지를 파라미터로 넘김
+                .setMaxResults(limit)       // 어디까지 가져올지를 파라미터로 넘김
+                .getResultList();
+    }
+
+    // 페이징 처리를 하면 totalCount로 똑같은 쿼리 하나 더 해줘야함
+    public long totalCount(int age) {
+        return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult();
+    }
 }

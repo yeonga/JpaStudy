@@ -1,5 +1,8 @@
 package study.datajpa.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,9 +43,15 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     List<Member> findListByUsername(String username);             // 컬렉션
     Member findMemberByUsername(String username);                 // 단건
-    Optional<Member> findOptionalByUsername(String username);     // 단건 Optional
-}
+    Optional<Member> findOptionalByUsername(String username);     // 단건 Optional\
 
+    // join을 많이 할 경우(쿼리가 복잡해질 경우 - 성능테스트에서 느릴 경우)는 countQuery를 별도로 작성해주기!!!
+    @Query(value = "select m from Member m left join m.team t",     // value = "" - 컨텐츠를 가져오는 쿼리
+            countQuery = "select count(m) from Member m")
+        // countQuery = "" - 별로도 분리해서 작성하는 이유? 쿼리가 복잡해지면 countQuery도 복잡해지고 그걸 다 가져오려해서 복잡해지기 때문에 join이 없어서 데이터가 많아도 simple하게 가져올 수 있음
+        // countQuery 는 전체를 다 가져오기 때문에 left join 이 되어있어 join을 해줄 필요가 없음
+    Page<Member> findByAge(int age, Pageable pageable); // 반환 타입을 Page로 받음
+}
 
 /* 여기서 구현체가 없는데 MemberRepositoryTest 에서
 @Autowired

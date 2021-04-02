@@ -10,6 +10,8 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
+        # dialect: org.hibernate.dialect.Oracle10gDialect
+        # jpa 가 dialect(방언)에 따라서 본인 데이터베이스 만드는 용에 맞춰서 실행을 해줌
         format_sql: true
 
 logging.level:
