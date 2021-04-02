@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
@@ -51,6 +52,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         // countQuery = "" - 별로도 분리해서 작성하는 이유? 쿼리가 복잡해지면 countQuery도 복잡해지고 그걸 다 가져오려해서 복잡해지기 때문에 join이 없어서 데이터가 많아도 simple하게 가져올 수 있음
         // countQuery 는 전체를 다 가져오기 때문에 left join 이 되어있어 join을 해줄 필요가 없음
     Page<Member> findByAge(int age, Pageable pageable); // 반환 타입을 Page로 받음
+
+    @Modifying(clearAutomatically = true)  // 이걸 적어줘야 jpa executeUpdate를 실행시킴. 이게 없으면 getResultList 나 getSingleResult 와 같은 것들을 호출함
+        // @Modifying(clearAutomatically = true) 이걸 해주면 이 쿼리가 나가고 난 뒤에 clear 과정을 자동으로 해줌.
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
 }
 
 /* 여기서 구현체가 없는데 MemberRepositoryTest 에서

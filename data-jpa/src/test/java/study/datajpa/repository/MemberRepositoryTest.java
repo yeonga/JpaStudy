@@ -16,6 +16,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,8 @@ class MemberRepositoryTest {
     MemberRepository memberRepository;
     @Autowired
     TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;    // 같은 Transaction이면 같은 Entity Manager 가 불러와져서 동작함
 
 
     @Test
@@ -260,4 +264,32 @@ class MemberRepositoryTest {
         }
         System.out.println("totalElement = " + totalElements);
     }*/
+
+    @Test
+    @Order(12)
+    public void bulkUpdate() {
+        //given
+        memberRepository.save(new Member(("member1"), 10));
+        memberRepository.save(new Member(("member2"), 19));
+        memberRepository.save(new Member(("member3"), 20));
+        memberRepository.save(new Member(("member4"), 21));
+        memberRepository.save(new Member(("member5"), 27));
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);  // 20살이거나 20살 이상인 사람들이 해당 -> +1 해줌
+
+        /*em.flush(); - 혹시 남아있는 변경사항을 DB에 저장
+        em.clear(); - 이게 핵심!!!!! <영속성 컨텍스트 안에 있는 데이터 비워주기> - 그래야 깔끔한 상태에서 DB를 다시 가져올 수 있음 -> 벌크업데이트 (+1) 연산 된 것으로 가져옴
+        */
+
+        // springDataJpa em.clear()를 안적어줘도 지원을 해주기 때문에 MemberRepository 의 @Modifying(clearAutomatically = true)과 같이 작성해주면 됨
+
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member member5 = result.get(0);
+        System.out.println("member5 = " + member5);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+    }
 }
