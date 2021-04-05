@@ -13,8 +13,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedQuery;
-import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +26,7 @@ import java.util.List;
         name = "Member.findByUsername",
         query = "select m from Member m where m.username= :username"
 )   // name="엔티티명.메소드명"
+@NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))    //(Member 연관된 애들 다 가져옴, member 뿐 아니라 team 관련도 다 가져옴)
 public class Member {
 
     // @Setter 은 가급적이면 실무에서 사용하지 않음(꼭 변경해야 할 때만 사용)
@@ -41,7 +43,7 @@ public class Member {
 
     // Member 와 Team 의 관계 - JPA에서 ManyToOne을 사용할 때 FetchType은 기본적으로 EAGER로 되어있는데, LAZY (지연)로 세팅해줘야함
     // 지연로딩 LAZY LOADING : 실제 객체 대신 프록시 객체를 로딩해두고 해당 객체를 실제 사용할 때 영속성 컨텍스트를 통해 데이터를 불러오는 방법
-    // Ex) Member를 조회할 때는 Member만 가져오고, Team이 필요할 때는 그 때 쿼리를 만들어서 가져옴
+    // Ex) Member를 조회할 때는 Member만 가져오고 Team은 같이 안가져오고, Team이 필요할 때 그 때 쿼리를 만들어서 가져옴
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")       // foreign key 명이 조인
     private Team team;

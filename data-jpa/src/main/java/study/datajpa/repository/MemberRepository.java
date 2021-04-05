@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.NamedEntityGraph;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +59,30 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         // @Modifying(clearAutomatically = true) 이걸 해주면 이 쿼리가 나가고 난 뒤에 clear 과정을 자동으로 해줌.
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    // 방법 1 - fetchJoin
+    @Query("select m from Member m left join fetch m.team") // fetch join 하면 member 와 연관된 team 쿼리를 한 번에 다 끌고 옴
+    List<Member> findMemberFetchJoin();
+
+    // 방법 2 - 위와 같이 JPQL 없이도 객체 그래프를 한 번에 엮어서 성능 최적화를 해서 가져옴 (위와 값 같이 나옴)
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    // *간단한 거 할 때 @EntityGraph를 사용함 / 복잡한 거 할 때는 JPQL 작성해줌*
+    // 방법 3 - JPQL도 짜고 fetchJoin도 할 때 (JPQL 안에 EntityGraph를 넣는 것) (위와 값 같이 나옴)
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    // 방법 4 - (위와 값 같이 나옴)
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+/*  방법 5 (Member 엔티티에 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team")) 추가해줌 / (위와 값 같이 나옴)
+    @EntityGraph("Member.all")
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+*/
 }
 
 /* 여기서 구현체가 없는데 MemberRepositoryTest 에서

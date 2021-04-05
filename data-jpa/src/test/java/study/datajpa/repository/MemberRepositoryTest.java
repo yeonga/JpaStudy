@@ -292,4 +292,37 @@ class MemberRepositoryTest {
         //then
         assertThat(resultCount).isEqualTo(3);
     }
+
+    @Test
+    @Order(13)
+    public void findMemberLazy() {
+        //given
+        //member1 -> teamA (member1 은 teamA를 참조함)
+        //member2 -> teamB (member2 은 teamB를 참조함)
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+        // 이렇게 하면 완전히 영속성 컨텍스트에 있는 캐시 정보들을 완전히 다 insert를 해서 반영하고 clear를 해서 깔끔하게 날려버림
+
+        //when - "N(결과 값) + 1 문제"라고 부름 ex) 결과 값이 2개 나오면 N 이 2이므로 N(2) + 1  이라고 함
+        //select Member 1 만 해서 가져옴 (Team 말고) - 쿼리를 1 번 날렸는데 결과가 2개 나옴
+        List<Member> members = memberRepository.findEntityGraphByUsername("member1");  // findAll - 순수하게 member 객체만 가져오는 것
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            // fetch가 LAZY로 되있기에, 이 때까지는 member의 객체들만 가져오고, member의 team은 null이 아닌 proxy (가짜)객체로 값을 가져옴 - Team$HibernateProxy$rHx1mYPD 이런 식으로 가져옴
+            System.out.println("member.team = " + member.getTeam().getName());
+            // member.getTeam().getName() 매소드를 호출 했을 때 그제서야 실제 DataBase에 team에 대해 쿼리를 날려서 데이터를 가져옴
+        }
+    }
 }
