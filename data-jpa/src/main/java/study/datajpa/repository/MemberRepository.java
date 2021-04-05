@@ -5,13 +5,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.LockModeType;
 import javax.persistence.NamedEntityGraph;
+import javax.persistence.QueryHint;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,6 +87,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @EntityGraph("Member.all")
     List<Member> findEntityGraphByUsername(@Param("username") String username);
 */
+
+    // JPA Hint - 성능 최적화를 위해 사용 (사용 잘 안함) / 진짜 중요하고 traffic이 많은 것에 사용하지, 하나 하나 다 사용하는건 아님.
+    // 읽을 때부터 readOnly, true로 되어있으면 변경감지 체크를 아예 안하고, 최적화시켜 snapshot을 안만듬 - 변경이 안된다고 가정하고 다 무시함(내부적으로 읽기로만 쓴다고 생각함)
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
 
 /* 여기서 구현체가 없는데 MemberRepositoryTest 에서

@@ -325,4 +325,33 @@ class MemberRepositoryTest {
             // member.getTeam().getName() 매소드를 호출 했을 때 그제서야 실제 DataBase에 team에 대해 쿼리를 날려서 데이터를 가져옴
         }
     }
+
+    @Test
+    @Order(14)
+    public void queryHint() {
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        //when
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        findMember.setUsername("member2");
+
+        em.flush();
+    }
+
+    @Test
+    @Order(15)
+    public void lock() {
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> findMember = memberRepository.findLockByUsername("member1");
+    }
 }
