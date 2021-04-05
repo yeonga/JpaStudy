@@ -322,7 +322,7 @@ class MemberRepositoryTest {
             System.out.println("member.teamClass = " + member.getTeam().getClass());
             // fetch가 LAZY로 되있기에, 이 때까지는 member의 객체들만 가져오고, member의 team은 null이 아닌 proxy (가짜)객체로 값을 가져옴 - Team$HibernateProxy$rHx1mYPD 이런 식으로 가져옴
             System.out.println("member.team = " + member.getTeam().getName());
-            // member.getTeam().getName() 매소드를 호출 했을 때 그제서야 실제 DataBase에 team에 대해 쿼리를 날려서 데이터를 가져옴
+            // member.getTeam().getName() 매소드를 호출 했을 때 - (team 엔티티 클래스에서 실제 가지고 있는 값 호출할 때)그제서야 실제 DataBase에 team에 대해 쿼리를 날려서 데이터를 가져옴
         }
     }
 
