@@ -14,6 +14,12 @@ spring:
         # jpa 가 dialect(방언)에 따라서 본인 데이터베이스 만드는 용에 맞춰서 실행을 해줌
         format_sql: true
 
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 2000
+
 logging.level:
   org.hibernate.SQL: debug
 #  org.hibernate.type: trace

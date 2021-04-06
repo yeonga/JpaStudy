@@ -21,7 +21,7 @@ import java.util.Optional;
 
 // interface 는 @Repository 를 안적어줘도 됨
 // MemberRepository 와 JpaRepository는 둘 다 interface 이므로 extends 상속을 적어줌
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 

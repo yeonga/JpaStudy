@@ -27,7 +27,7 @@ import javax.persistence.NamedQuery;
         query = "select m from Member m where m.username= :username"
 )   // name="엔티티명.메소드명"
 @NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))    //(Member 연관된 애들 다 가져옴, member 뿐 아니라 team 관련도 다 가져옴)
-public class Member {
+public class Member extends BaseEntity {
 
     // @Setter 은 가급적이면 실무에서 사용하지 않음(꼭 변경해야 할 때만 사용)
 

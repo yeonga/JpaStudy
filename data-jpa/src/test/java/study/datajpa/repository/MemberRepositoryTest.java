@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,8 @@ class MemberRepositoryTest {
     TeamRepository teamRepository;
     @PersistenceContext
     EntityManager em;    // 같은 Transaction이면 같은 Entity Manager 가 불러와져서 동작함
-
+    @Autowired
+    MemberQueryRepository memberQueryRepository;
 
     @Test
     @Order(1)
@@ -353,5 +353,11 @@ class MemberRepositoryTest {
 
         //when
         List<Member> findMember = memberRepository.findLockByUsername("member1");
+    }
+
+    @Test
+    @Order(16)
+    public void callCustom() {
+        List<Member> result = memberRepository.findMemberCustom();
     }
 }
